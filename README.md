@@ -15,3 +15,5 @@ Folder contents:
 - "mainQWdg.ui" - widget template for the main window
 
 - "DSP_Diagram.png" - to be replaced with the diagram that shows the working principle
+
+![SW Audio Processor](screenshot.png)
