@@ -13,6 +13,9 @@ from scipy.fftpack import fft
 
 class AudioVisualizer(QMainWindow):
     SILENCE = chr(0)
+    active_FIR = True
+    coeff_FIR = [0, 2, 4, 6, 8, 6, 4, 2, 0, 0]
+    hist_FIR = [0, 0, 0, 0, 0, 0, 0, 0, 0]
     def __init__(self):
         super().__init__()
 
@@ -108,7 +111,8 @@ class AudioVisualizer(QMainWindow):
                     audio_data += self.audio_queue.get_nowait()
                 # Convert the binary data into NumPy array for visualization
                 #audio_data_np = np.frombuffer(audio_data, dtype=np.int16)
-                audio_data_np = struct.unpack(str(self.FRAME) + 'h', audio_data)
+                audio_data_np = audio_data
+                #audio_data_np = struct.unpack(str(self.FRAME) + 'h', audio_data)
                 # Update the waveform plot
                 self.curve.setData(audio_data_np)
                 sp_data = fft(audio_data_np)
@@ -139,9 +143,14 @@ class AudioVisualizer(QMainWindow):
             # Read audio data from the input stream
             data = self.input_stream.read(self.CHUNK)
 
+            if self.active_FIR:
+                data_processed = self.run_FIR(data, self.coeff_FIR)
+            #else:
+            #    data_processed = data
+
             # Send the audio data to the visualization queue
             if self.visualization == True:
-                self.audio_queue.put(data)
+                self.audio_queue.put(data_processed)
 
             # Play back the audio data
             try:
@@ -177,6 +186,30 @@ class AudioVisualizer(QMainWindow):
         self.stop_audio()
         self.p.terminate()
         event.accept()
+
+    def run_FIR(self, data, coeff):
+        data_array = np.array(struct.unpack(str(self.CHUNK) + 'h', data), np.int16)
+        data_processed = data_array
+        data_length = len(data_array)
+        fir_length = len(coeff)
+        fir_length_1 = fir_length - 1
+        for i in range(data_length):
+            if i < fir_length_1:
+                data_temp = 0
+                for j in range(fir_length):
+                    if (i-j<0):
+                        data_temp += coeff[j] * self.hist_FIR[j-i-1]
+                    else:
+                        data_temp += coeff[j] * data_array[i-j]
+                data_processed[i] = data_temp
+            else:
+                data_temp = 0
+                for j in range(fir_length):
+                    data_temp += coeff[j] * data_array[i-j]
+                data_processed[i] = data_temp
+        for j in range(fir_length_1):
+            self.hist_FIR[j] = data_array[-j]
+        return data_processed
 
 # Start the PyQt application
 if __name__ == '__main__':
