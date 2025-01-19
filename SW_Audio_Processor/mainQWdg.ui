@@ -265,6 +265,19 @@
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QCheckBox" name="checkBox_FIR">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>410</y>
+     <width>76</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>FIR enable</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

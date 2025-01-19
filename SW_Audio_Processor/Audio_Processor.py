@@ -14,8 +14,8 @@ from scipy.fftpack import fft
 class AudioVisualizer(QMainWindow):
     SILENCE = chr(0)
     active_FIR = True
-    coeff_FIR = [0, 2, 4, 6, 8, 6, 4, 2, 0, 0]
-    hist_FIR = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    coeff_FIR = np.array([0, 2, 4, 6, 8, 6, 4, 2, 0, 0], dtype=np.int16)
+    hist_FIR = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.int16)
     def __init__(self):
         super().__init__()
 
@@ -51,10 +51,11 @@ class AudioVisualizer(QMainWindow):
         # Set up main window layout
         self.setWindowTitle('Software Audio Processor')
 
-        self.setCentralWidget(uic.loadUi("mainQWdg.ui"))
+        self.setCentralWidget(uic.loadUi("./SW_Audio_Processor/mainQWdg.ui"))
         self.centralWidget().StartAudioButton.clicked.connect(self.start_audio)
         self.centralWidget().StopAudioButton.clicked.connect(self.stop_audio)
         self.centralWidget().checkBoxVisualize.clicked.connect(self.switchVisualizationMode)
+        self.centralWidget().checkBox_FIR.clicked.connect(self.toggleFIR)
 
         penViolet = mkPen(color=(170, 40, 255), width=3)
         penCian = mkPen(color=(50, 200, 200), width=3)
@@ -68,7 +69,7 @@ class AudioVisualizer(QMainWindow):
         self.win_fft = pg.GraphicsLayoutWidget(title="Real-Time Audio Spectrum")
         self.plotFFT = self.win_fft.addPlot(title="FFT")
         self.curveFFT = self.plotFFT.plot(pen=penViolet)
-        self.plotFFT.setLogMode(x=True, y=True)
+        self.plotFFT.setLogMode(x=True, y=False)
         self.plotFFT.setXRange(
                     np.log10(20), np.log10(self.RATE / 2))
 
@@ -111,8 +112,9 @@ class AudioVisualizer(QMainWindow):
                     audio_data += self.audio_queue.get_nowait()
                 # Convert the binary data into NumPy array for visualization
                 #audio_data_np = np.frombuffer(audio_data, dtype=np.int16)
-                audio_data_np = audio_data
-                #audio_data_np = struct.unpack(str(self.FRAME) + 'h', audio_data)
+                #
+                #audio_data_np = audio_data
+                audio_data_np = struct.unpack(str(self.FRAME) + 'h', audio_data)
                 # Update the waveform plot
                 self.curve.setData(audio_data_np)
                 sp_data = fft(audio_data_np)
@@ -145,8 +147,8 @@ class AudioVisualizer(QMainWindow):
 
             if self.active_FIR:
                 data_processed = self.run_FIR(data, self.coeff_FIR)
-            #else:
-            #    data_processed = data
+            else:
+                data_processed = data
 
             # Send the audio data to the visualization queue
             if self.visualization == True:
@@ -154,7 +156,7 @@ class AudioVisualizer(QMainWindow):
 
             # Play back the audio data
             try:
-                self.output_stream.write(data)
+                self.output_stream.write(data_processed)
                 free = self.output_stream.get_write_available() # How much space is left in the buffer?
                 if free > self.CHUNK: # Is there a lot of space in the buffer?
                     tofill = free - self.CHUNK
@@ -180,6 +182,14 @@ class AudioVisualizer(QMainWindow):
             if self.visualization == True:
                 self.visualization = False
                 self.timer.stop()
+    
+    def toggleFIR(self):
+        if (self.centralWidget().checkBox_FIR.isChecked()):
+            self.active_FIR = True
+            print(self.active_FIR)
+        else:
+            self.active_FIR = False
+            print(self.active_FIR)
 
     def closeEvent(self, event):
         """Handle application close event and stop audio properly."""
@@ -189,27 +199,27 @@ class AudioVisualizer(QMainWindow):
 
     def run_FIR(self, data, coeff):
         data_array = np.array(struct.unpack(str(self.CHUNK) + 'h', data), np.int16)
-        data_processed = data_array
         data_length = len(data_array)
+        data_processed = np.zeros(data_length,dtype=np.int16)
         fir_length = len(coeff)
         fir_length_1 = fir_length - 1
         for i in range(data_length):
             if i < fir_length_1:
-                data_temp = 0
+                data_temp = np.int32(0)
                 for j in range(fir_length):
                     if (i-j<0):
-                        data_temp += coeff[j] * self.hist_FIR[j-i-1]
+                        data_temp += coeff[j] * np.int32(self.hist_FIR[j-i-1])
                     else:
-                        data_temp += coeff[j] * data_array[i-j]
-                data_processed[i] = data_temp
+                        data_temp += coeff[j] * np.int32(data_array[i-j])
+                data_processed[i] = np.int16(data_temp >> 5)
             else:
-                data_temp = 0
+                data_temp = np.int32(0)
                 for j in range(fir_length):
-                    data_temp += coeff[j] * data_array[i-j]
-                data_processed[i] = data_temp
+                    data_temp += coeff[j] * np.int32(data_array[i-j])
+                data_processed[i] = np.int16(data_temp >> 5)
         for j in range(fir_length_1):
             self.hist_FIR[j] = data_array[-j]
-        return data_processed
+        return struct.pack(str(self.CHUNK) + 'h', *data_processed)
 
 # Start the PyQt application
 if __name__ == '__main__':
