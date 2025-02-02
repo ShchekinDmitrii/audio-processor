@@ -124,11 +124,11 @@ class AudioVisualizer(QMainWindow):
                 sp_data = fft(audio_data_np)
                 sp_data = np.abs(sp_data[0:int(self.FRAME)]
                                 ) * 2 / (128 * self.FRAME)
-                peak_value = np.max(sp_data)
-                min_value = np.min(sp_data)
+                peak_value = np.round(np.max(sp_data), decimals=5)
+                min_value = np.round(np.min(sp_data), decimals=5)
                 self.curveFFT.setData(self.f, sp_data)
-                self.centralWidget().Amplitude.setText(str(peak_value-min_value))
-                self.centralWidget().PeakAmp.setText(str(peak_value))
+                self.centralWidget().Amplitude.setText("Amplitude: " + str(peak_value-min_value))
+                self.centralWidget().PeakAmp.setText("Peak value: " + str(peak_value))
                 self.centralWidget().repaint()
         except queue.Empty:
             pass  # No data to visualize at the moment

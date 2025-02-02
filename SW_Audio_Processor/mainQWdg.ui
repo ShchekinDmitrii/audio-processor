@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
-    <height>750</height>
+    <width>1150</width>
+    <height>660</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,14 +18,14 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>1200</width>
-    <height>750</height>
+    <width>1150</width>
+    <height>660</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>1200</width>
-    <height>750</height>
+    <width>1150</width>
+    <height>660</height>
    </size>
   </property>
   <property name="baseSize">
@@ -180,44 +180,6 @@
     <pixmap>DSP_Diagram.png</pixmap>
    </property>
   </widget>
-  <widget class="QPushButton" name="StartAudioButton">
-   <property name="geometry">
-    <rect>
-     <x>5</x>
-     <y>700</y>
-     <width>100</width>
-     <height>40</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Space Grotesk</family>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Start Audio</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="StopAudioButton">
-   <property name="geometry">
-    <rect>
-     <x>395</x>
-     <y>700</y>
-     <width>100</width>
-     <height>40</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Space Grotesk</family>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Stop Audio</string>
-   </property>
-  </widget>
   <widget class="QGroupBox" name="groupVisualizer">
    <property name="geometry">
     <rect>
@@ -249,107 +211,171 @@
     <string>Visualizer</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBoxVisualize">
-   <property name="geometry">
-    <rect>
-     <x>190</x>
-     <y>670</y>
-     <width>111</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Visualize</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="checkBox_FIR">
+  <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
      <x>520</x>
-     <y>410</y>
-     <width>121</width>
-     <height>20</height>
+     <y>500</y>
+     <width>621</width>
+     <height>151</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>12</pointsize>
-     <bold>true</bold>
-    </font>
+   <property name="title">
+    <string>Control</string>
    </property>
-   <property name="text">
-    <string>FIR enable</string>
-   </property>
+   <widget class="QCheckBox" name="checkBoxVisualize">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>111</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Visualize</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="StartAudioButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>100</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Space Grotesk</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Start Audio</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="StopAudioButton">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>100</y>
+      <width>100</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Space Grotesk</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Stop Audio</string>
+    </property>
+   </widget>
   </widget>
-  <widget class="QCheckBox" name="checkBox_FIR_2">
+  <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
      <x>520</x>
-     <y>450</y>
-     <width>121</width>
-     <height>20</height>
+     <y>370</y>
+     <width>621</width>
+     <height>121</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>12</pointsize>
-     <bold>true</bold>
-    </font>
+   <property name="title">
+    <string>Filters</string>
    </property>
-   <property name="text">
-    <string>FIR_2 enable</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="PeakAmp">
-   <property name="geometry">
-    <rect>
-     <x>760</x>
-     <y>400</y>
-     <width>291</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>20</pointsize>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">color: rgb(255, 0, 0)</string>
-   </property>
-   <property name="text">
-    <string>Peak Value: 0</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="Amplitude">
-   <property name="geometry">
-    <rect>
-     <x>760</x>
-     <y>450</y>
-     <width>291</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>20</pointsize>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">color: rgb(255, 0, 0)</string>
-   </property>
-   <property name="text">
-    <string>Amplitude: 0</string>
-   </property>
+   <widget class="QCheckBox" name="checkBox_FIR">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>30</y>
+      <width>131</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>12</pointsize>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>FIR: Low pass </string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_FIR_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>80</y>
+      <width>131</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>12</pointsize>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>FIR: High pass</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="PeakAmp">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>20</y>
+      <width>381</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>20</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 0, 0)</string>
+    </property>
+    <property name="text">
+     <string>Peak Value: 0</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Amplitude">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>70</y>
+      <width>381</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>20</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 0, 0)</string>
+    </property>
+    <property name="text">
+     <string>Amplitude: 0</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>
