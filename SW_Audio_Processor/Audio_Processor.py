@@ -13,6 +13,12 @@ from scipy.fftpack import fft
 
 class AudioVisualizer(QMainWindow):
     SILENCE = chr(0)
+    active_FIR = False
+    active_FIR_2 = False
+    coeff_FIR_low_pass = np.array([0, 2, 4, 6, 8, 6, 4, 2, 0, 0], dtype=np.int16)
+    coeff_FIR_high_pass = np.array([0, -2, -4, -6, -8, 8, 6, 4, 2, 0], dtype=np.int16) 
+    hist_FIR = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.int16)
+    hist_FIR_2 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.int16)
     def __init__(self):
         super().__init__()
 
@@ -48,10 +54,12 @@ class AudioVisualizer(QMainWindow):
         # Set up main window layout
         self.setWindowTitle('Software Audio Processor')
 
-        self.setCentralWidget(uic.loadUi("mainQWdg.ui"))
+        self.setCentralWidget(uic.loadUi("./SW_Audio_Processor/mainQWdg.ui"))
         self.centralWidget().StartAudioButton.clicked.connect(self.start_audio)
         self.centralWidget().StopAudioButton.clicked.connect(self.stop_audio)
         self.centralWidget().checkBoxVisualize.clicked.connect(self.switchVisualizationMode)
+        self.centralWidget().checkBox_FIR.clicked.connect(self.toggleFIR)
+        self.centralWidget().checkBox_FIR_2.clicked.connect(self.toggleFIR_2)
 
         penViolet = mkPen(color=(170, 40, 255), width=3)
         penCian = mkPen(color=(50, 200, 200), width=3)
@@ -65,7 +73,7 @@ class AudioVisualizer(QMainWindow):
         self.win_fft = pg.GraphicsLayoutWidget(title="Real-Time Audio Spectrum")
         self.plotFFT = self.win_fft.addPlot(title="FFT")
         self.curveFFT = self.plotFFT.plot(pen=penViolet)
-        self.plotFFT.setLogMode(x=True, y=True)
+        self.plotFFT.setLogMode(x=True, y=False)
         self.plotFFT.setXRange(
                     np.log10(20), np.log10(self.RATE / 2))
 
@@ -108,13 +116,20 @@ class AudioVisualizer(QMainWindow):
                     audio_data += self.audio_queue.get_nowait()
                 # Convert the binary data into NumPy array for visualization
                 #audio_data_np = np.frombuffer(audio_data, dtype=np.int16)
+                #
+                #audio_data_np = audio_data
                 audio_data_np = struct.unpack(str(self.FRAME) + 'h', audio_data)
                 # Update the waveform plot
                 self.curve.setData(audio_data_np)
                 sp_data = fft(audio_data_np)
                 sp_data = np.abs(sp_data[0:int(self.FRAME)]
                                 ) * 2 / (128 * self.FRAME)
+                peak_value = np.max(sp_data)
+                min_value = np.min(sp_data)
                 self.curveFFT.setData(self.f, sp_data)
+                self.centralWidget().Amplitude.setText(str(peak_value-min_value))
+                self.centralWidget().PeakAmp.setText(str(peak_value))
+                self.centralWidget().repaint()
         except queue.Empty:
             pass  # No data to visualize at the moment
 
@@ -139,13 +154,21 @@ class AudioVisualizer(QMainWindow):
             # Read audio data from the input stream
             data = self.input_stream.read(self.CHUNK)
 
+            if self.active_FIR:
+                (data_processed, self.hist_FIR) = self.run_FIR(data, self.coeff_FIR_low_pass, self.hist_FIR, 5)
+            else:
+                data_processed = data
+
+            if self.active_FIR_2: 
+                (data_processed, self.hist_FIR_2) = self.run_FIR(data_processed, self.coeff_FIR_high_pass, self.hist_FIR_2, 4) 
+
             # Send the audio data to the visualization queue
             if self.visualization == True:
-                self.audio_queue.put(data)
+                self.audio_queue.put(data_processed)
 
             # Play back the audio data
             try:
-                self.output_stream.write(data)
+                self.output_stream.write(data_processed)
                 free = self.output_stream.get_write_available() # How much space is left in the buffer?
                 if free > self.CHUNK: # Is there a lot of space in the buffer?
                     tofill = free - self.CHUNK
@@ -171,12 +194,52 @@ class AudioVisualizer(QMainWindow):
             if self.visualization == True:
                 self.visualization = False
                 self.timer.stop()
+    
+    def toggleFIR(self):
+        if (self.centralWidget().checkBox_FIR.isChecked()):
+            self.active_FIR = True
+            print("FIR-1: "+str(self.active_FIR))
+        else:
+            self.active_FIR = False
+            print("FIR-1: "+str(self.active_FIR))
+
+    def toggleFIR_2(self):
+        if (self.centralWidget().checkBox_FIR_2.isChecked()):
+            self.active_FIR_2 = True
+            print("FIR-2: "+str(self.active_FIR_2))
+        else:
+            self.active_FIR_2 = False
+            print("FIR-2: "+str(self.active_FIR_2))
 
     def closeEvent(self, event):
         """Handle application close event and stop audio properly."""
         self.stop_audio()
         self.p.terminate()
         event.accept()
+
+    def run_FIR(self, data, coeff, history, bitshift):
+        data_array = np.array(struct.unpack(str(self.CHUNK) + 'h', data), np.int16)
+        data_length = len(data_array)
+        data_processed = np.zeros(data_length,dtype=np.int16)
+        fir_length = len(coeff)
+        fir_length_1 = fir_length - 1
+        for i in range(data_length):
+            if i < fir_length_1:
+                data_temp = np.int32(0)
+                for j in range(fir_length):
+                    if (i-j<0):
+                        data_temp += coeff[j] * np.int32(history[j-i-1])
+                    else:
+                        data_temp += coeff[j] * np.int32(data_array[i-j])
+                data_processed[i] = np.int16(data_temp >> bitshift)
+            else:
+                data_temp = np.int32(0)
+                for j in range(fir_length):
+                    data_temp += coeff[j] * np.int32(data_array[i-j])
+                data_processed[i] = np.int16(data_temp >> bitshift)
+        for j in range(fir_length_1):
+            history[j] = data_array[-j]
+        return (struct.pack(str(self.CHUNK) + 'h', *data_processed), history)
 
 # Start the PyQt application
 if __name__ == '__main__':
